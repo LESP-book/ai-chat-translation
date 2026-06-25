@@ -1,0 +1,7 @@
+zh_CN:
+  site_settings:
+    ai_chat_translation_enabled: "启用聊天消息 AI 翻译"
+  ai_chat_translation:
+    errors:
+      disabled: "聊天 AI 翻译未启用。"
+      not_translatable: "这条聊天消息不能翻译。"

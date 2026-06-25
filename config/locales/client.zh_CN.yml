@@ -1,0 +1,8 @@
+zh_CN:
+  js:
+    ai_chat_translation:
+      translate: "翻译"
+      retranslate: "重新翻译"
+      show_original: "查看原文"
+      show_translation: "查看译文"
+      scheduled: "已安排翻译"

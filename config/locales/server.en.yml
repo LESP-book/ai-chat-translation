@@ -1,0 +1,7 @@
+en:
+  site_settings:
+    ai_chat_translation_enabled: "Enable AI translation for chat messages"
+  ai_chat_translation:
+    errors:
+      disabled: "AI chat translation is disabled."
+      not_translatable: "This chat message cannot be translated."

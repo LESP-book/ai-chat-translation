@@ -1,0 +1,4 @@
+plugins:
+  ai_chat_translation_enabled:
+    default: false
+    client: true

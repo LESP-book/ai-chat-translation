@@ -1,0 +1,8 @@
+en:
+  js:
+    ai_chat_translation:
+      translate: "Translate"
+      retranslate: "Retranslate"
+      show_original: "View original"
+      show_translation: "View translation"
+      scheduled: "Translation scheduled"
