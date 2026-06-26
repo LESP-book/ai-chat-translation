@@ -2,3 +2,18 @@ plugins:
   ai_chat_translation_enabled:
     default: false
     client: true
+  ai_chat_translation_backfill_hourly_rate:
+    default: 0
+    min: 0
+    max: 100000
+    client: false
+  ai_chat_translation_backfill_max_age_days:
+    default: 0
+    min: 0
+    max: 20000
+    client: false
+  ai_chat_translation_allowed_channel_ids:
+    default: ""
+    type: list
+    list_type: simple
+    client: false

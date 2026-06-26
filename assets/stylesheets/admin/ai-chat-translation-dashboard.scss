@@ -1,0 +1,123 @@
+.ai-chat-translation-dashboard {
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  &__stat {
+    border: 1px solid var(--primary-low);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  &__stat-value {
+    display: block;
+    font-size: var(--font-up-4);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  &__stat-label {
+    color: var(--primary-medium);
+  }
+
+  &__section {
+    border-top: 1px solid var(--primary-low);
+    padding: 1.5rem 0;
+
+    h2 {
+      margin: 0 0 0.35rem;
+      font-size: var(--font-up-2);
+    }
+
+    p {
+      color: var(--primary-medium);
+      margin: 0 0 1rem;
+      max-width: 42rem;
+    }
+  }
+
+  &__settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1rem;
+    max-width: 48rem;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-weight: 600;
+    }
+
+    input {
+      max-width: 16rem;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  &__all-channels,
+  &__channel-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  &__all-channels {
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__channel-list {
+    display: grid;
+    gap: 0.4rem;
+    max-width: 56rem;
+  }
+
+  &__channel-row {
+    border: 1px solid var(--primary-low);
+    border-radius: 6px;
+    padding: 0.65rem 0.75rem;
+  }
+
+  &__channel-title {
+    font-weight: 600;
+  }
+
+  &__channel-count {
+    color: var(--primary-medium);
+    margin-left: auto;
+  }
+
+  &__progress-list {
+    display: grid;
+    gap: 1rem;
+    max-width: 60rem;
+  }
+
+  &__progress-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.35rem;
+  }
+
+  &__progress-track {
+    background: var(--primary-low);
+    border-radius: 6px;
+    height: 0.75rem;
+    overflow: hidden;
+  }
+
+  &__progress-bar {
+    background: var(--tertiary);
+    height: 100%;
+  }
+}

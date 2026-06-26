@@ -8,8 +8,7 @@ module Jobs
     REDIS_KEY = "ai-chat-translation:localize_chat_messages:in_progress"
 
     def execute(args)
-      return if !DiscourseAi::Translation.backfill_enabled?
-      return if !AiChatTranslation.enabled?
+      return if !AiChatTranslation.backfill_enabled?
 
       return if Discourse.redis.get(REDIS_KEY).to_i > 0
 
@@ -20,7 +19,7 @@ module Jobs
         return
       end
 
-      limit = SiteSetting.ai_translation_backfill_hourly_rate / (60 / 15)
+      limit = SiteSetting.ai_chat_translation_backfill_hourly_rate / (60 / 15)
       return if limit <= 0
 
       pairs = AiChatTranslation::ChatMessageCandidates.needs_localization(limit:)

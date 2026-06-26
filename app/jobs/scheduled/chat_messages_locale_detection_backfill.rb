@@ -9,8 +9,7 @@ module Jobs
     cluster_concurrency 1
 
     def execute(args)
-      return if !DiscourseAi::Translation.backfill_enabled?
-      return if !AiChatTranslation.enabled?
+      return if !AiChatTranslation.backfill_enabled?
 
       unless DiscourseAi::Translation.credits_available_for_post_detection?
         Rails.logger.info(
@@ -19,7 +18,7 @@ module Jobs
         return
       end
 
-      limit = SiteSetting.ai_translation_backfill_hourly_rate / (60 / 5)
+      limit = SiteSetting.ai_chat_translation_backfill_hourly_rate / (60 / 5)
       return if limit <= 0
 
       messages = AiChatTranslation::ChatMessageCandidates.needs_locale_detection(limit:)

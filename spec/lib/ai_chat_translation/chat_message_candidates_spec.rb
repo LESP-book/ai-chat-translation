@@ -10,6 +10,9 @@ describe AiChatTranslation::ChatMessageCandidates do
     enable_current_plugin
     SiteSetting.chat_enabled = true
     SiteSetting.ai_chat_translation_enabled = true
+    SiteSetting.ai_chat_translation_backfill_hourly_rate = 60
+    SiteSetting.ai_chat_translation_backfill_max_age_days = 30
+    SiteSetting.ai_chat_translation_allowed_channel_ids = ""
     SiteSetting.ai_translation_max_post_length = 100
     SiteSetting.ai_translation_personal_messages = "none"
     SiteSetting.ai_translation_excluded_categories = ""
@@ -22,6 +25,13 @@ describe AiChatTranslation::ChatMessageCandidates do
 
   it "rejects excluded category channels" do
     SiteSetting.ai_translation_excluded_categories = category.id.to_s
+
+    expect(described_class.eligible_message?(message)).to eq(false)
+  end
+
+  it "rejects category channels outside the chat channel allowlist" do
+    other_channel = Fabricate(:category_channel, chatable: Fabricate(:category))
+    SiteSetting.ai_chat_translation_allowed_channel_ids = other_channel.id.to_s
 
     expect(described_class.eligible_message?(message)).to eq(false)
   end
@@ -54,5 +64,38 @@ describe AiChatTranslation::ChatMessageCandidates do
     dm_message = Fabricate(:chat_message, user:, chat_channel: dm)
 
     expect(described_class.eligible_message?(dm_message)).to eq(false)
+  end
+
+  it "uses the chat backfill max age when finding messages needing locale detection" do
+    SiteSetting.ai_chat_translation_backfill_max_age_days = 5
+    old_message =
+      Fabricate(:chat_message, user:, chat_channel: channel, message: "Old", created_at: 10.days.ago)
+
+    expect(described_class.needs_locale_detection(limit: 10)).to include(message)
+    expect(described_class.needs_locale_detection(limit: 10)).not_to include(old_message)
+  end
+
+  it "reports completion for all supported locales" do
+    SiteSetting.content_localization_supported_locales = "fr|en"
+    allow(DiscourseAi::Translation).to receive(:locales).and_return(%w[fr en])
+    message.update!(locale: "en")
+
+    AiChatMessageLocalization.create!(
+      chat_message: message,
+      locale: "fr",
+      raw: "Bonjour le monde",
+      cooked: "<p>Bonjour le monde</p>",
+      source_hash: AiChatTranslation::ChatMessageLocalizer.source_hash(message),
+      localizer_user_id: Discourse.system_user.id,
+    )
+
+    result = described_class.completion_all_locales
+
+    expect(result[:total]).to eq(1)
+    expect(result[:messages_with_detected_locale]).to eq(1)
+    expect(result[:translation_progress]).to contain_exactly(
+      { locale: "fr", done: 1, total: 1 },
+      { locale: "en", done: 0, total: 0 },
+    )
   end
 end

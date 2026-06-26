@@ -33,8 +33,23 @@ module AiChatTranslation
         end
       else
         channel.chatable_type == "Category" &&
+          channel_allowed_by_setting?(channel) &&
           !DiscourseAi::Translation.category_excluded?(channel.chatable_id)
       end
+    end
+
+    def self.allowed_channel_ids
+      SiteSetting
+        .ai_chat_translation_allowed_channel_ids
+        .to_s
+        .split("|")
+        .filter_map { |id| Integer(id, exception: false) }
+        .uniq
+    end
+
+    def self.channel_allowed_by_setting?(channel)
+      ids = allowed_channel_ids
+      ids.blank? || ids.include?(channel.id)
     end
 
     def self.base_scope
@@ -42,7 +57,10 @@ module AiChatTranslation
         Chat::Message
           .includes(:user, chat_channel: :chatable)
           .joins(:chat_channel)
-          .where("chat_messages.created_at > ?", SiteSetting.ai_translation_backfill_max_age_days.days.ago)
+          .where(
+            "chat_messages.created_at > ?",
+            SiteSetting.ai_chat_translation_backfill_max_age_days.days.ago,
+          )
           .where(deleted_at: nil)
           .where(streaming: false)
           .where.not(message: [nil, ""])
@@ -58,6 +76,9 @@ module AiChatTranslation
             excluded_category_ids,
           )
       end
+
+      allowed_ids = allowed_channel_ids
+      messages = messages.where(chat_channel_id: allowed_ids) if allowed_ids.present?
 
       case SiteSetting.ai_translation_personal_messages
       when "all"
@@ -105,6 +126,84 @@ module AiChatTranslation
         end
 
       pairs
+    end
+
+    def self.get_completion_all_locales
+      Discourse.cache.fetch(progress_cache_key, expires_in: 30.minutes) { completion_all_locales }
+    end
+
+    def self.available_channel_options(user)
+      Chat::Channel
+        .public_channels
+        .where(status: Chat::Channel.statuses[:open])
+        .includes(:chatable)
+        .order(:id)
+        .map do |channel|
+          { id: channel.id, title: channel.title(user), messages_count: channel.messages_count }
+        end
+    end
+
+    def self.progress_cache_key
+      [
+        "ai-chat-translations-progress",
+        SiteSetting.content_localization_supported_locales,
+        SiteSetting.ai_chat_translation_backfill_max_age_days,
+        SiteSetting.ai_chat_translation_allowed_channel_ids,
+        SiteSetting.ai_translation_excluded_categories,
+        SiteSetting.ai_translation_include_bot_content,
+        SiteSetting.ai_translation_max_post_length,
+        SiteSetting.ai_translation_personal_messages,
+      ].join(":")
+    end
+
+    def self.completion_all_locales
+      supported = DiscourseAi::Translation.locales
+      return empty_progress if supported.blank?
+
+      totals_by_locale = Hash.new(0)
+      done_by_locale = Hash.new(0)
+      total = 0
+      messages_with_detected_locale = 0
+
+      base_scope.includes(:ai_chat_message_localizations).find_each do |message|
+        total += 1
+        next if message.locale.blank?
+
+        messages_with_detected_locale += 1
+        current_hash = ChatMessageLocalizer.source_hash(message)
+        current_localized_bases =
+          message
+            .ai_chat_message_localizations
+            .select { |localization| localization.source_hash == current_hash }
+            .map { |localization| localization.locale.to_s.tr("-", "_").split("_").first }
+            .to_set
+
+        supported.each do |locale|
+          next if LocaleNormalizer.is_same?(locale, message.locale)
+
+          totals_by_locale[locale] += 1
+          base_locale = locale.to_s.tr("-", "_").split("_").first
+          done_by_locale[locale] += 1 if current_localized_bases.include?(base_locale)
+        end
+      end
+
+      translation_progress =
+        supported
+          .map { |locale| { locale:, done: done_by_locale[locale], total: totals_by_locale[locale] } }
+          .sort_by do |row|
+            percentage = row[:total] > 0 ? row[:done].to_f / row[:total] : 0
+            -percentage
+          end
+
+      {
+        translation_progress: translation_progress,
+        total: total,
+        messages_with_detected_locale: messages_with_detected_locale,
+      }
+    end
+
+    def self.empty_progress
+      { translation_progress: [], total: 0, messages_with_detected_locale: 0 }
     end
   end
 end

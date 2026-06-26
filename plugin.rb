@@ -16,6 +16,11 @@ module ::AiChatTranslation
     defined?(::Chat) && defined?(::DiscourseAi::Translation) && SiteSetting.chat_enabled &&
       SiteSetting.ai_chat_translation_enabled && DiscourseAi::Translation.enabled?
   end
+
+  def self.backfill_enabled?
+    enabled? && SiteSetting.ai_chat_translation_backfill_hourly_rate > 0 &&
+      SiteSetting.ai_chat_translation_backfill_max_age_days > 0
+  end
 end
 
 require_relative "lib/ai_chat_translation/engine"
@@ -33,6 +38,7 @@ after_initialize do
     lib/ai_chat_translation/messages_query_extension
     app/models/ai_chat_message_localization
     app/controllers/ai_chat_translation/translation_controller
+    app/controllers/ai_chat_translation/admin/dashboard_controller
     app/jobs/regular/detect_translate_chat_message
     app/jobs/regular/localize_chat_messages
     app/jobs/scheduled/chat_messages_locale_detection_backfill

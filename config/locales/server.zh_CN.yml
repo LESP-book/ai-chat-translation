@@ -1,6 +1,9 @@
 zh_CN:
   site_settings:
     ai_chat_translation_enabled: "启用聊天消息 AI 翻译"
+    ai_chat_translation_backfill_hourly_rate: "聊天 AI 翻译回填每小时速率"
+    ai_chat_translation_backfill_max_age_days: "聊天 AI 翻译回填最大天数"
+    ai_chat_translation_allowed_channel_ids: "允许聊天 AI 翻译的频道"
   ai_chat_translation:
     errors:
       disabled: "聊天 AI 翻译未启用。"
