@@ -43,12 +43,14 @@ module("Unit | AI chat translation | chat-message", function (hooks) {
 
     const interactor = new ChatMessageInteractor(getOwner(this), message);
     assert.true(
-      interactor.secondaryActions.some((action) => action.id === "aiChatTranslate")
+      interactor.secondaryActions.some(
+        (action) => action.id === "aiChatTranslate",
+      ),
     );
     assert.true(
       interactor.secondaryActions.some(
-        (action) => action.id === "aiChatToggleTranslation"
-      )
+        (action) => action.id === "aiChatToggleTranslation",
+      ),
     );
 
     I18n.locale = oldLocale;

@@ -1,7 +1,7 @@
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
-import { apiInitializer } from "discourse/lib/api";
 import cookie from "discourse/lib/cookie";
+import { withPluginApi } from "discourse/lib/plugin-api";
 import I18n, { i18n } from "discourse-i18n";
 import ChatChannelSubscriptionManager from "discourse/plugins/chat/discourse/lib/chat-channel-subscription-manager";
 import ChatChannelThreadSubscriptionManager from "discourse/plugins/chat/discourse/lib/chat-channel-thread-subscription-manager";
@@ -20,7 +20,7 @@ function truthySetting(value) {
   return value === true || value === "true";
 }
 
-export default apiInitializer((api) => {
+function initializeAiChatTranslation(api) {
   const siteSettings = api.container.lookup("service:site-settings");
 
   if (
@@ -55,7 +55,7 @@ export default apiInitializer((api) => {
 
   const cookedDescriptor = Object.getOwnPropertyDescriptor(
     ChatMessage.prototype,
-    "cooked"
+    "cooked",
   );
 
   Object.defineProperties(ChatMessage.prototype, {
@@ -69,11 +69,11 @@ export default apiInitializer((api) => {
         return (
           this.aiChatLocalizations?.find(
             (localization) =>
-              normalizeLocale(localization.locale) === currentLocale
+              normalizeLocale(localization.locale) === currentLocale,
           ) ||
           this.aiChatLocalizations?.find(
             (localization) =>
-              baseLocale(localization.locale) === baseLocale(currentLocale)
+              baseLocale(localization.locale) === baseLocale(currentLocale),
           ) ||
           null
         );
@@ -88,6 +88,9 @@ export default apiInitializer((api) => {
 
     aiChatShowingTranslation: {
       get() {
+        // 本地原文/译文切换依赖 incrementVersion() 触发 Glimmer 重新计算 cooked。
+        this.version;
+
         if (!siteSettings.content_localization_enabled) {
           return false;
         }
@@ -131,7 +134,7 @@ export default apiInitializer((api) => {
 
   const secondaryActionsDescriptor = Object.getOwnPropertyDescriptor(
     ChatMessageInteractor.prototype,
-    "secondaryActions"
+    "secondaryActions",
   );
 
   Object.defineProperty(ChatMessageInteractor.prototype, "secondaryActions", {
@@ -173,7 +176,7 @@ export default apiInitializer((api) => {
       `/ai-chat-translation/channels/${this.message.channel.id}/messages/${this.message.id}/translate.json`,
       {
         type: "POST",
-      }
+      },
     )
       .then(() => {
         this.toasts.success({
@@ -186,14 +189,25 @@ export default apiInitializer((api) => {
 
   patchSubscriptionManager(ChatChannelSubscriptionManager);
   patchSubscriptionManager(ChatChannelThreadSubscriptionManager);
-});
+}
+
+export default {
+  name: "ai-chat-translation",
+  after: "chat-setup",
+
+  initialize() {
+    withPluginApi(initializeAiChatTranslation);
+  },
+};
 
 function applyAiChatTranslationPayload(message, args) {
   message.locale = args.locale;
   message.aiChatLocalizations =
     args.aiChatLocalizations ?? args.ai_chat_localizations ?? [];
   message.aiChatTranslationOutdated =
-    args.aiChatTranslationOutdated ?? args.ai_chat_translation_outdated ?? false;
+    args.aiChatTranslationOutdated ??
+    args.ai_chat_translation_outdated ??
+    false;
   message.canTranslateChatMessage =
     args.canTranslateChatMessage ?? args.can_translate_chat_message ?? false;
   message.aiChatTranslationMode = null;

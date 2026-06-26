@@ -18,7 +18,7 @@ module Jobs
         return
       end
 
-      message = Chat::Message.find_by(id: args[:chat_message_id])
+      message = ::Chat::Message.find_by(id: args[:chat_message_id])
       force = args[:force] || false
       return if !AiChatTranslation::ChatMessageCandidates.eligible_message?(message, force:)
 
@@ -48,7 +48,7 @@ module Jobs
         localized = true if localize(message, locale).present?
       end
 
-      Chat::Publisher.publish_refresh!(message.chat_channel, message.reload) if localized
+      ::Chat::Publisher.publish_refresh!(message.chat_channel, message.reload) if localized
     end
 
     private

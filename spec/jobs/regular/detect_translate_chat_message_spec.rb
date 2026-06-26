@@ -25,10 +25,10 @@ describe Jobs::DetectTranslateChatMessage do
     described_class.new.execute(chat_message_id: message.id)
 
     expect(AiChatTranslation::ChatMessageLocaleDetector).to have_received(:detect_locale).with(
-      instance_of(Chat::Message),
+      a_kind_of(Chat::Message),
     )
     expect(AiChatTranslation::ChatMessageLocalizer).to have_received(:localize).with(
-      instance_of(Chat::Message),
+      a_kind_of(Chat::Message),
       "fr",
     )
     expect(Chat::Publisher).to have_received(:publish_refresh!)

@@ -21,11 +21,11 @@ module Jobs
       end
 
       pairs.each do |chat_message_id, locale|
-        message = Chat::Message.find_by(id: chat_message_id)
+        message = ::Chat::Message.find_by(id: chat_message_id)
         next if !AiChatTranslation::ChatMessageCandidates.eligible_message?(message, force: true)
 
         localization = AiChatTranslation::ChatMessageLocalizer.localize(message, locale)
-        Chat::Publisher.publish_refresh!(message.chat_channel, message.reload) if localization.present?
+        ::Chat::Publisher.publish_refresh!(message.chat_channel, message.reload) if localization.present?
       rescue FinalDestination::SSRFDetector::LookupFailedError
         nil
       rescue => e
