@@ -6,7 +6,6 @@ describe AiChatTranslation::ChatMessageLocalizer do
 
   before do
     enable_current_plugin
-    SiteSetting.ai_translation_max_post_length = 100
   end
 
   def stub_translation(raw)

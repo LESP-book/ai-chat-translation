@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateAiChatTranslationTables < ActiveRecord::Migration[7.0]
+class CreateAiChatTranslationTables < ActiveRecord::Migration[8.0]
   def up
     add_column :chat_messages, :locale, :string, limit: 20 if !column_exists?(:chat_messages, :locale)
     add_index :chat_messages, :locale if !index_exists?(:chat_messages, :locale)

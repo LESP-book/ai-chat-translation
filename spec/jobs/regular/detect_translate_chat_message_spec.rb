@@ -8,7 +8,6 @@ describe Jobs::DetectTranslateChatMessage do
     enable_current_plugin
     SiteSetting.chat_enabled = true
     SiteSetting.ai_chat_translation_enabled = true
-    SiteSetting.ai_translation_max_post_length = 100
     SiteSetting.content_localization_supported_locales = "fr|en"
     allow(DiscourseAi::Translation).to receive(:enabled?).and_return(true)
     allow(DiscourseAi::Translation).to receive(:locales).and_return(%w[fr en])

@@ -9,7 +9,6 @@ describe Chat::MessageSerializer do
     enable_current_plugin
     SiteSetting.chat_enabled = true
     SiteSetting.ai_chat_translation_enabled = true
-    SiteSetting.ai_translation_max_post_length = 100
     allow(DiscourseAi::Translation).to receive(:enabled?).and_return(true)
     allow(guardian).to receive(:can_localize_content?).and_return(true)
   end

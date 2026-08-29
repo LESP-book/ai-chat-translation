@@ -15,9 +15,9 @@ describe AiChatTranslation::Admin::DashboardController do
     SiteSetting.ai_chat_translation_backfill_hourly_rate = 60
     SiteSetting.ai_chat_translation_backfill_max_age_days = 30
     SiteSetting.ai_chat_translation_allowed_channel_ids = channel.id.to_s
-    SiteSetting.ai_translation_max_post_length = 100
+    SiteSetting.ai_translation_category_scope = "public"
+    SiteSetting.ai_translation_categories = ""
     SiteSetting.ai_translation_personal_messages = "none"
-    SiteSetting.ai_translation_excluded_categories = ""
     SiteSetting.content_localization_supported_locales = "fr|en"
     allow(DiscourseAi::Translation).to receive(:enabled?).and_return(true)
     allow(DiscourseAi::Translation).to receive(:locales).and_return(%w[fr en])

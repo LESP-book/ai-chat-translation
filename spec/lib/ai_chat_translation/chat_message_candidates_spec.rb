@@ -13,9 +13,9 @@ describe AiChatTranslation::ChatMessageCandidates do
     SiteSetting.ai_chat_translation_backfill_hourly_rate = 60
     SiteSetting.ai_chat_translation_backfill_max_age_days = 30
     SiteSetting.ai_chat_translation_allowed_channel_ids = ""
-    SiteSetting.ai_translation_max_post_length = 100
+    SiteSetting.ai_translation_category_scope = "public"
+    SiteSetting.ai_translation_categories = ""
     SiteSetting.ai_translation_personal_messages = "none"
-    SiteSetting.ai_translation_excluded_categories = ""
     allow(DiscourseAi::Translation).to receive(:enabled?).and_return(true)
   end
 
@@ -23,8 +23,9 @@ describe AiChatTranslation::ChatMessageCandidates do
     expect(described_class.eligible_message?(message)).to eq(true)
   end
 
-  it "rejects excluded category channels" do
-    SiteSetting.ai_translation_excluded_categories = category.id.to_s
+  it "rejects category channels excluded by the current AI category scope" do
+    SiteSetting.ai_translation_category_scope = "exclude_strict"
+    SiteSetting.ai_translation_categories = category.id.to_s
 
     expect(described_class.eligible_message?(message)).to eq(false)
   end
@@ -36,10 +37,11 @@ describe AiChatTranslation::ChatMessageCandidates do
     expect(described_class.eligible_message?(message)).to eq(false)
   end
 
-  it "rejects messages over the reused AI translation max length" do
-    SiteSetting.ai_translation_max_post_length = 5
+  it "does not impose the removed AI source-length cap" do
+    long_message =
+      Fabricate(:chat_message, user:, chat_channel: channel, message: "a" * 101)
 
-    expect(described_class.eligible_message?(message)).to eq(false)
+    expect(described_class.eligible_message?(long_message)).to eq(true)
   end
 
   it "does not let forced manual translation bypass bot content policy" do
@@ -73,6 +75,25 @@ describe AiChatTranslation::ChatMessageCandidates do
 
     expect(described_class.needs_locale_detection(limit: 10)).to include(message)
     expect(described_class.needs_locale_detection(limit: 10)).not_to include(old_message)
+  end
+
+  it "uses the current AI category scope for chat backfill" do
+    SiteSetting.ai_translation_category_scope = "exclude_strict"
+    SiteSetting.ai_translation_categories = category.id.to_s
+
+    expect(described_class.needs_locale_detection(limit: 10)).not_to include(message)
+  end
+
+  it "does not apply the public channel allowlist to direct-message backfill" do
+    SiteSetting.ai_translation_personal_messages = "all"
+    SiteSetting.ai_chat_translation_allowed_channel_ids = Fabricate(:category_channel).id.to_s
+    dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user)])
+    dm_message = Fabricate(:chat_message, user:, chat_channel: dm, message: "Hello")
+
+    candidates = described_class.needs_locale_detection(limit: 10)
+
+    expect(candidates).not_to include(message)
+    expect(candidates).to include(dm_message)
   end
 
   it "reports completion for all supported locales" do

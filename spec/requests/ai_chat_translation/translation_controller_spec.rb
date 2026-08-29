@@ -10,7 +10,6 @@ describe AiChatTranslation::TranslationController do
     enable_current_plugin
     SiteSetting.chat_enabled = true
     SiteSetting.ai_chat_translation_enabled = true
-    SiteSetting.ai_translation_max_post_length = 100
     SiteSetting.content_localization_supported_locales = "fr"
     SiteSetting.content_localization_enabled = true
     SiteSetting.content_localization_allowed_groups = Group::AUTO_GROUPS[:staff].to_s

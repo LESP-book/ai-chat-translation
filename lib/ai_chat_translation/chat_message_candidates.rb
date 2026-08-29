@@ -6,7 +6,6 @@ module AiChatTranslation
       return false if !AiChatTranslation.enabled?
       return false if message.blank? || message.deleted_at.present? || message.streaming?
       return false if message.message.blank?
-      return false if message.message.length > SiteSetting.ai_translation_max_post_length
       return false if !eligible_user?(message.user)
 
       eligible_channel?(message.chat_channel)
@@ -34,7 +33,7 @@ module AiChatTranslation
       else
         channel.chatable_type == "Category" &&
           channel_allowed_by_setting?(channel) &&
-          !DiscourseAi::Translation.category_excluded?(channel.chatable_id)
+          DiscourseAi::Translation.category_allowed?(channel.chatable)
       end
     end
 
@@ -64,21 +63,26 @@ module AiChatTranslation
           .where(deleted_at: nil)
           .where(streaming: false)
           .where.not(message: [nil, ""])
-          .where("LENGTH(chat_messages.message) <= ?", SiteSetting.ai_translation_max_post_length)
 
       messages = messages.where("chat_messages.user_id > 0") unless SiteSetting.ai_translation_include_bot_content
 
-      excluded_category_ids = DiscourseAi::Translation.excluded_category_ids
-      if excluded_category_ids.present?
-        messages =
-          messages.where(
-            "chat_channels.chatable_type != 'Category' OR chat_channels.chatable_id NOT IN (?)",
-            excluded_category_ids,
-          )
-      end
+      category_condition, category_params =
+        DiscourseAi::Translation.category_scope_condition(category_column: "chat_channels.chatable_id")
+      messages =
+        messages.where(
+          "chat_channels.chatable_type = 'DirectMessage' OR " \
+            "(chat_channels.chatable_type = 'Category' AND (#{category_condition}))",
+          category_params,
+        )
 
       allowed_ids = allowed_channel_ids
-      messages = messages.where(chat_channel_id: allowed_ids) if allowed_ids.present?
+      if allowed_ids.present?
+        messages =
+          messages.where(
+            "chat_channels.chatable_type != 'Category' OR chat_messages.chat_channel_id IN (?)",
+            allowed_ids,
+          )
+      end
 
       case SiteSetting.ai_translation_personal_messages
       when "all"
@@ -146,13 +150,13 @@ module AiChatTranslation
     def self.progress_cache_key
       [
         "ai-chat-translations-progress",
+        "v2",
         SiteSetting.content_localization_supported_locales,
         SiteSetting.ai_chat_translation_backfill_max_age_days,
         SiteSetting.ai_chat_translation_allowed_channel_ids,
-        SiteSetting.ai_translation_excluded_categories,
         SiteSetting.ai_translation_include_bot_content,
-        SiteSetting.ai_translation_max_post_length,
         SiteSetting.ai_translation_personal_messages,
+        DiscourseAi::Translation.category_scope_cache_key,
       ].join(":")
     end
 

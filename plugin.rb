@@ -2,10 +2,10 @@
 
 # name: ai-chat-translation
 # about: AI translation support for Discourse Chat messages
-# version: 0.1.0
+# version: 0.2.0
 # authors: kuma
 # url: https://github.com/kuma/ai-chat-translation
-# required_version: 3.4.0
+# required_version: 2026.8.0
 
 enabled_site_setting :ai_chat_translation_enabled
 

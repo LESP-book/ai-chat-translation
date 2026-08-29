@@ -11,22 +11,27 @@ import ChatMessage from "discourse/plugins/chat/discourse/models/chat-message";
 module("Unit | AI chat translation | chat-message", function (hooks) {
   setupTest(hooks);
 
-  test("selects exact/base locale translations and exposes message actions", function (assert) {
-    logIn(getOwner(this));
+  test("selects exact/base locale translations and respects current translation preferences", function (assert) {
+    const owner = getOwner(this);
+    logIn(owner);
 
-    const siteSettings = getOwner(this).lookup("service:site-settings");
+    const currentUser = owner.lookup("service:current-user");
+    currentUser.user_option.automatically_translate = true;
+    currentUser.user_option.show_original_content = true;
+
+    const siteSettings = owner.lookup("service:site-settings");
     siteSettings.chat_enabled = true;
     siteSettings.discourse_ai_enabled = true;
     siteSettings.ai_translation_enabled = true;
     siteSettings.ai_chat_translation_enabled = true;
     siteSettings.content_localization_enabled = true;
 
-    aiChatTranslationInitializer.initialize(getOwner(this));
+    aiChatTranslationInitializer.initialize(owner);
 
     const oldLocale = I18n.locale;
     I18n.locale = "fr_CA";
 
-    const channel = new ChatFabricators(getOwner(this)).channel({ id: 1 });
+    const channel = new ChatFabricators(owner).channel({ id: 1 });
     const message = ChatMessage.create(channel, {
       id: 10,
       cooked: "<p>Hello</p>",
@@ -41,7 +46,7 @@ module("Unit | AI chat translation | chat-message", function (hooks) {
     message.toggleAiChatTranslation();
     assert.strictEqual(message.cooked, "<p>Hello</p>");
 
-    const interactor = new ChatMessageInteractor(getOwner(this), message);
+    const interactor = new ChatMessageInteractor(owner, message);
     assert.true(
       interactor.secondaryActions.some(
         (action) => action.id === "aiChatTranslate",

@@ -1,6 +1,6 @@
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
-import cookie from "discourse/lib/cookie";
+import { automaticallyTranslate } from "discourse/lib/content-localization";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import I18n, { i18n } from "discourse-i18n";
 import ChatChannelSubscriptionManager from "discourse/plugins/chat/discourse/lib/chat-channel-subscription-manager";
@@ -14,10 +14,6 @@ function normalizeLocale(locale) {
 
 function baseLocale(locale) {
   return normalizeLocale(locale)?.split("_")?.[0];
-}
-
-function truthySetting(value) {
-  return value === true || value === "true";
 }
 
 function initializeAiChatTranslation(api) {
@@ -39,11 +35,7 @@ function initializeAiChatTranslation(api) {
   ChatMessage.__aiChatTranslationPatched = true;
 
   function showOriginalByDefault() {
-    const value = currentUser
-      ? currentUser.user_option?.show_original_content
-      : cookie("content-localization-show-original");
-
-    return truthySetting(value);
+    return !automaticallyTranslate(currentUser);
   }
 
   const originalCreate = ChatMessage.create;

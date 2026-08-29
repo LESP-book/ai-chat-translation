@@ -9,7 +9,6 @@ module AiChatTranslation
     def self.localize(message, target_locale = I18n.locale, llm_model: nil)
       return if message.blank? || target_locale.blank? || message.message.blank?
       return if LocaleNormalizer.is_same?(message.locale, target_locale)
-      return if message.message.length > SiteSetting.ai_translation_max_post_length
 
       target_locale = target_locale.to_s.sub("-", "_")
       translated_raw =
