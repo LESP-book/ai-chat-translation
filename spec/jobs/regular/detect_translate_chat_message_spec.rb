@@ -14,12 +14,12 @@ describe Jobs::DetectTranslateChatMessage do
     allow(DiscourseAi::Translation).to receive(:credits_available_for_post_detection?).and_return(true)
   end
 
-  it "detects locale, localizes missing targets, and publishes refresh" do
+  it "detects locale, localizes missing targets, and publishes a compact update" do
     allow(AiChatTranslation::ChatMessageLocaleDetector).to receive(:detect_locale).and_return("en")
     allow(AiChatTranslation::ChatMessageLocalizer).to receive(:localize).and_return(
       instance_double(AiChatMessageLocalization),
     )
-    allow(Chat::Publisher).to receive(:publish_refresh!)
+    allow(AiChatTranslation::LocalizationUpdatePublisher).to receive(:publish!)
 
     described_class.new.execute(chat_message_id: message.id)
 
@@ -30,7 +30,9 @@ describe Jobs::DetectTranslateChatMessage do
       a_kind_of(Chat::Message),
       "fr",
     )
-    expect(Chat::Publisher).to have_received(:publish_refresh!)
+    expect(AiChatTranslation::LocalizationUpdatePublisher).to have_received(:publish!).with(
+      a_kind_of(Chat::Message),
+    )
   end
 
   it "skips when credits are unavailable" do

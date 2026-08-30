@@ -65,6 +65,7 @@ require_relative "lib/ai_chat_translation/admin/translation_scope_options"
 
 after_initialize do
   require_relative "app/controllers/ai_chat_translation/admin/dashboard_controller"
+  require_relative "app/controllers/ai_chat_translation/localizations_controller"
   require_relative "app/controllers/ai_chat_translation/translation_controller"
 end
 
@@ -79,6 +80,8 @@ after_initialize do
   %w[
     lib/ai_chat_translation/chat_raw_translator
     lib/ai_chat_translation/chat_message_localizer
+    lib/ai_chat_translation/localization_payload_query
+    lib/ai_chat_translation/localization_update_publisher
     lib/ai_chat_translation/chat_message_locale_detector
     lib/ai_chat_translation/direct_message_translation_policy
     lib/ai_chat_translation/chat_message_candidates

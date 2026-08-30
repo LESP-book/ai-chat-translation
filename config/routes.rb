@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 AiChatTranslation::Engine.routes.draw do
+  get "/channels/:channel_id/messages/:message_id/localization" => "localizations#show",
+      defaults: {
+        format: :json,
+      }
+
   post "/channels/:channel_id/messages/:message_id/translate" => "translation#translate",
        defaults: {
          format: :json,

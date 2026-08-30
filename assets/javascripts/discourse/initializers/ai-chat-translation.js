@@ -3,6 +3,7 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 import { automaticallyTranslate } from "discourse/lib/content-localization";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import I18n, { i18n } from "discourse-i18n";
+import AiChatTranslationLocalizationUpdateAdapter from "discourse/plugins/ai-chat-translation/discourse/lib/ai-chat-translation-localization-update-adapter";
 import ChatChannelSubscriptionManager from "discourse/plugins/chat/discourse/lib/chat-channel-subscription-manager";
 import ChatChannelThreadSubscriptionManager from "discourse/plugins/chat/discourse/lib/chat-channel-thread-subscription-manager";
 import ChatMessageInteractor from "discourse/plugins/chat/discourse/lib/chat-message-interactor";
@@ -38,6 +39,14 @@ function initializeAiChatTranslation(api) {
     return !automaticallyTranslate(currentUser);
   }
 
+  function shouldFetchLocalization(message) {
+    return (
+      siteSettings.content_localization_enabled &&
+      (automaticallyTranslate(currentUser) ||
+        message.aiChatTranslationRequested)
+    );
+  }
+
   const originalCreate = ChatMessage.create;
   ChatMessage.create = function (channel, args = {}) {
     const message = originalCreate.call(this, channel, args);
@@ -58,17 +67,7 @@ function initializeAiChatTranslation(api) {
           return null;
         }
 
-        return (
-          this.aiChatLocalizations?.find(
-            (localization) =>
-              normalizeLocale(localization.locale) === currentLocale,
-          ) ||
-          this.aiChatLocalizations?.find(
-            (localization) =>
-              baseLocale(localization.locale) === baseLocale(currentLocale),
-          ) ||
-          null
-        );
+        return localizationForCurrentLocale([this.aiChatLocalization]);
       },
     },
 
@@ -164,6 +163,8 @@ function initializeAiChatTranslation(api) {
   };
 
   ChatMessageInteractor.prototype.aiChatTranslate = function () {
+    this.message.aiChatTranslationRequested = true;
+
     return ajax(
       `/ai-chat-translation/channels/${this.message.channel.id}/messages/${this.message.id}/translate.json`,
       {
@@ -176,9 +177,20 @@ function initializeAiChatTranslation(api) {
           data: { message: i18n("ai_chat_translation.scheduled") },
         });
       })
-      .catch(popupAjaxError);
+      .catch((error) => {
+        this.message.aiChatTranslationRequested = false;
+        popupAjaxError(error);
+      });
   };
 
+  AiChatTranslationLocalizationUpdateAdapter.install(
+    ChatChannelSubscriptionManager,
+    shouldFetchLocalization,
+  );
+  AiChatTranslationLocalizationUpdateAdapter.install(
+    ChatChannelThreadSubscriptionManager,
+    shouldFetchLocalization,
+  );
   patchSubscriptionManager(ChatChannelSubscriptionManager);
   patchSubscriptionManager(ChatChannelThreadSubscriptionManager);
 }
@@ -192,10 +204,29 @@ export default {
   },
 };
 
+function localizationForCurrentLocale(localizations) {
+  const currentLocale = normalizeLocale(I18n.locale);
+  if (!currentLocale) {
+    return null;
+  }
+
+  return (
+    localizations.find(
+      (localization) => normalizeLocale(localization?.locale) === currentLocale,
+    ) ||
+    localizations.find(
+      (localization) =>
+        baseLocale(localization?.locale) === baseLocale(currentLocale),
+    ) ||
+    null
+  );
+}
+
 function applyAiChatTranslationPayload(message, args) {
   message.locale = args.locale;
-  message.aiChatLocalizations =
-    args.aiChatLocalizations ?? args.ai_chat_localizations ?? [];
+  message.aiChatLocalization = localizationForCurrentLocale(
+    args.aiChatLocalizations ?? args.ai_chat_localizations ?? [],
+  );
   message.aiChatTranslationOutdated =
     args.aiChatTranslationOutdated ??
     args.ai_chat_translation_outdated ??

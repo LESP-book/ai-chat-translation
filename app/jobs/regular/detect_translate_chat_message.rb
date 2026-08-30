@@ -48,7 +48,7 @@ module Jobs
         localized = true if localize(message, locale).present?
       end
 
-      ::Chat::Publisher.publish_refresh!(message.chat_channel, message.reload) if localized
+      AiChatTranslation::LocalizationUpdatePublisher.publish!(message.reload) if localized
     end
 
     private

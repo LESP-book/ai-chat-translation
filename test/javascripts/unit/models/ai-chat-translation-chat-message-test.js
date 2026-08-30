@@ -41,6 +41,12 @@ module("Unit | AI chat translation | chat-message", function (hooks) {
       can_translate_chat_message: true,
     });
 
+    assert.deepEqual(message.aiChatLocalization, {
+      locale: "fr",
+      cooked: "<p>Bonjour</p>",
+      source_hash: "hash",
+    });
+    assert.strictEqual(message.aiChatLocalizations, undefined);
     assert.strictEqual(message.cooked, "<p>Bonjour</p>");
 
     message.toggleAiChatTranslation();
