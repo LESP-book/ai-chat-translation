@@ -4,6 +4,8 @@ module AiChatTranslation
   module Admin
     class GroupDirectMessageOptions
       def self.all
+        return [] unless defined?(::Chat::Channel)
+
         Chat::Channel
           .where(chatable_type: "DirectMessage")
           .joins(

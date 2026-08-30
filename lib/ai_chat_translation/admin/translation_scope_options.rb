@@ -4,6 +4,8 @@ module AiChatTranslation
   module Admin
     class TranslationScopeOptions
       def self.public_channels(user)
+        return [] unless defined?(::Chat::Channel)
+
         Chat::Channel
           .public_channels
           .where(status: Chat::Channel.statuses[:open])

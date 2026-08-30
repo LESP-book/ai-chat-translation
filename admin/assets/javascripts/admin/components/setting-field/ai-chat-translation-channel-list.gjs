@@ -1,8 +1,11 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
+import { hash } from "@ember/helper";
 import { action } from "@ember/object";
 import { ajax } from "discourse/lib/ajax";
-import DMultiSelect from "discourse/ui-kit/d-multi-select";
+import { makeArray } from "discourse/lib/helpers";
+import { splitString } from "discourse/lib/utilities";
+import ListSetting from "discourse/select-kit/components/list-setting";
 
 const OPTIONS_KEY_BY_SETTING = {
   ai_chat_translation_allowed_channel_ids: "channel_options",
@@ -10,8 +13,10 @@ const OPTIONS_KEY_BY_SETTING = {
     "direct_message_channel_options",
 };
 
+const TOKEN_SEPARATOR = "|";
+
 export default class AiChatTranslationChannelList extends Component {
-  @tracked options = [];
+  @tracked rawOptions = [];
   #optionsRequest;
 
   constructor() {
@@ -23,12 +28,18 @@ export default class AiChatTranslationChannelList extends Component {
     return OPTIONS_KEY_BY_SETTING[this.args.definition.key];
   }
 
-  get selectedOptions() {
-    const selectedIds = new Set(
-      this.args.field.value.toString().split("|").filter(Boolean)
-    );
+  get selectedIds() {
+    const value = this.args.field.value;
+    return Array.isArray(value)
+      ? value.map(String)
+      : splitString(value, TOKEN_SEPARATOR);
+  }
 
-    return this.options.filter((option) => selectedIds.has(String(option.id)));
+  get choices() {
+    return this.rawOptions.map((option) => ({
+      name: `${option.title} #${option.id}`,
+      id: String(option.id),
+    }));
   }
 
   async fetchOptions() {
@@ -36,8 +47,8 @@ export default class AiChatTranslationChannelList extends Component {
       "/admin/plugins/ai-chat-translation/translation-scopes.json"
     )
       .then((response) => {
-        this.options = response[this.optionsKey] || [];
-        return this.options;
+        this.rawOptions = response[this.optionsKey] || [];
+        return this.rawOptions;
       })
       .catch((error) => {
         this.#optionsRequest = null;
@@ -48,39 +59,21 @@ export default class AiChatTranslationChannelList extends Component {
   }
 
   @action
-  async loadOptions(filter = "") {
-    const options = await this.fetchOptions();
-    const normalizedFilter = filter.toLowerCase();
-
-    return options.filter((option) =>
-      `${option.title} ${option.id}`.toLowerCase().includes(normalizedFilter)
-    );
-  }
-
-  @action
-  updateSelection(selection) {
-    this.args.field.set(selection.map((option) => option.id).join("|"));
+  onChange(values) {
+    this.args.field.set(makeArray(values).join(TOKEN_SEPARATOR));
   }
 
   <template>
     <@field.Control>
-      <DMultiSelect
-        @loadFn={{this.loadOptions}}
-        @selection={{this.selectedOptions}}
-        @onChange={{this.updateSelection}}
-        @label={{@definition.label}}
-        class="ai-chat-translation-setting-multi-select"
-      >
-        <:selection as |option|>{{option.title}}</:selection>
-        <:result as |option|>
-          <span class="ai-chat-translation-setting-multi-select__title">
-            {{option.title}}
-          </span>
-          <span class="ai-chat-translation-setting-multi-select__id">
-            #{{option.id}}
-          </span>
-        </:result>
-      </DMultiSelect>
+      <ListSetting
+        @value={{this.selectedIds}}
+        @choices={{this.choices}}
+        @settingName={{@definition.key}}
+        @nameProperty="name"
+        @valueProperty="id"
+        @onChange={{this.onChange}}
+        @options={{hash allowAny=false disabled=@field.disabled}}
+      />
     </@field.Control>
   </template>
 }
