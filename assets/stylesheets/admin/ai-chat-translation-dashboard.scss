@@ -40,22 +40,22 @@
     font-size: 1.15rem;
 
     &.--messages {
-      background: rgba(var(--tertiary-rgb, 0, 136, 204), 0.12);
+      background: rgb(var(--tertiary-rgb, 0, 136, 204), 0.12);
       color: var(--tertiary);
     }
 
     &.--detection {
-      background: rgba(14, 165, 233, 0.12);
+      background: rgb(14, 165, 233, 0.12);
       color: #0284c7;
     }
 
     &.--pending {
-      background: rgba(245, 158, 11, 0.12);
+      background: rgb(245, 158, 11, 0.12);
       color: #d97706;
     }
 
     &.--completed {
-      background: rgba(16, 185, 129, 0.12);
+      background: rgb(16, 185, 129, 0.12);
       color: #059669;
     }
   }
@@ -96,17 +96,17 @@
     }
 
     &.--info {
-      background: rgba(14, 165, 233, 0.15);
+      background: rgb(14, 165, 233, 0.15);
       color: #0284c7;
     }
 
     &.--warning {
-      background: rgba(245, 158, 11, 0.15);
+      background: rgb(245, 158, 11, 0.15);
       color: #d97706;
     }
 
     &.--success {
-      background: rgba(16, 185, 129, 0.15);
+      background: rgb(16, 185, 129, 0.15);
       color: #059669;
     }
 
@@ -339,6 +339,7 @@
   0%, 100% {
     opacity: 0.6;
   }
+
   50% {
     opacity: 0.3;
   }

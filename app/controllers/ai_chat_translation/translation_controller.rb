@@ -3,6 +3,7 @@
 module AiChatTranslation
   class TranslationController < ::ApplicationController
     before_action :ensure_logged_in
+    before_action :ensure_translation_integration_available
     before_action :check_permissions
     before_action :rate_limit!
 
@@ -35,6 +36,13 @@ module AiChatTranslation
     end
 
     private
+
+    def ensure_translation_integration_available
+      return if AiChatTranslation.translation_integration_available?
+
+      render json: failed_json.merge(error: I18n.t("ai_chat_translation.errors.disabled")),
+             status: :bad_request
+    end
 
     def check_permissions
       guardian.ensure_can_localize_content!

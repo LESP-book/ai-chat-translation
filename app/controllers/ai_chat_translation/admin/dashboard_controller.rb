@@ -6,9 +6,8 @@ module AiChatTranslation
       requires_plugin AiChatTranslation::PLUGIN_NAME
 
       def progress
-        if !AiChatTranslation.backfill_enabled?
-          return render json: AiChatTranslation::ChatMessageCandidates.empty_progress
-        end
+        return render json: AiChatTranslation.empty_progress unless AiChatTranslation.translation_integration_available?
+        return render json: AiChatTranslation.empty_progress unless AiChatTranslation.backfill_enabled?
 
         render json: AiChatTranslation::ChatMessageCandidates.get_completion_all_locales
       end

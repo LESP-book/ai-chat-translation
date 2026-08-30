@@ -2,10 +2,10 @@ import { hash } from "@ember/helper";
 import { render } from "@ember/test-helpers";
 import { module, test } from "qunit";
 import Form from "discourse/components/form";
-import AiChatTranslationChannelList from "discourse/plugins/ai-chat-translation/admin/components/setting-field/ai-chat-translation-channel-list";
 import { setupRenderingTest } from "discourse/tests/helpers/component-test";
 import pretender, { response } from "discourse/tests/helpers/create-pretender";
 import selectKit from "discourse/tests/helpers/select-kit-helper";
+import AiChatTranslationChannelList from "discourse/plugins/ai-chat-translation/admin/components/setting-field/ai-chat-translation-channel-list";
 
 module("Integration | Component | AI chat translation channel list", function (hooks) {
   setupRenderingTest(hooks);

@@ -61,4 +61,13 @@ describe AiChatTranslation::TranslationController do
 
     expect(response.status).to eq(400)
   end
+
+  it "returns bad request when the translation integration is unavailable" do
+    hide_const("AiChatTranslation::ChatMessageCandidates")
+    sign_in(admin)
+
+    post "/ai-chat-translation/channels/#{channel.id}/messages/#{message.id}/translate.json"
+
+    expect(response.status).to eq(400)
+  end
 end

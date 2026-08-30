@@ -182,7 +182,7 @@ module AiChatTranslation
     end
 
     def self.empty_progress
-      { translation_progress: [], total: 0, messages_with_detected_locale: 0 }
+      AiChatTranslation.empty_progress
     end
   end
 end

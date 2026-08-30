@@ -9,7 +9,9 @@
 
 enabled_site_setting :ai_chat_translation_enabled
 
-register_asset "stylesheets/admin/ai-chat-translation-dashboard.scss"
+add_admin_route "ai_chat_translation.admin.title", "ai-chat-translation", use_new_show_route: true
+
+register_asset "stylesheets/admin/ai-chat-translation-dashboard.scss", :admin
 
 register_svg_icon "language"
 register_svg_icon "comments"
@@ -22,6 +24,25 @@ register_svg_icon "layer-group"
 
 module ::AiChatTranslation
   PLUGIN_NAME = "ai-chat-translation"
+  EMPTY_PROGRESS = {
+    translation_progress: [],
+    total: 0,
+    messages_with_detected_locale: 0,
+    completed: 0,
+    pending: 0,
+    percentage: 0,
+  }.freeze
+
+  def self.empty_progress
+    EMPTY_PROGRESS
+  end
+
+  def self.translation_integration_available?
+    !!(
+      defined?(::Chat) && defined?(::DiscourseAi::Translation) &&
+        defined?(::AiChatTranslation::ChatMessageCandidates)
+    )
+  end
 
   def self.enabled?
     defined?(::Chat) && defined?(::DiscourseAi::Translation) && SiteSetting.chat_enabled &&
@@ -43,6 +64,11 @@ require_relative "lib/ai_chat_translation/admin/group_direct_message_options"
 require_relative "lib/ai_chat_translation/admin/translation_scope_options"
 
 after_initialize do
+  require_relative "app/controllers/ai_chat_translation/admin/dashboard_controller"
+  require_relative "app/controllers/ai_chat_translation/translation_controller"
+end
+
+after_initialize do
   require_relative "app/controllers/ai_chat_translation/admin/translation_scopes_controller"
 end
 
@@ -59,8 +85,6 @@ after_initialize do
     lib/ai_chat_translation/chat_message_serializer_extension
     lib/ai_chat_translation/messages_query_extension
     app/models/ai_chat_message_localization
-    app/controllers/ai_chat_translation/translation_controller
-    app/controllers/ai_chat_translation/admin/dashboard_controller
     app/jobs/regular/detect_translate_chat_message
     app/jobs/regular/localize_chat_messages
     app/jobs/scheduled/chat_messages_locale_detection_backfill

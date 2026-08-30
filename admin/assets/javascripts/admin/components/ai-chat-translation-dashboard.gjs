@@ -5,7 +5,6 @@ import { service } from "@ember/service";
 import { trustHTML } from "@ember/template";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
-import { eq } from "discourse/truth-helpers";
 import DBreadcrumbsItem from "discourse/ui-kit/d-breadcrumbs-item";
 import DButton from "discourse/ui-kit/d-button";
 import DPageSubheader from "discourse/ui-kit/d-page-subheader";
@@ -88,12 +87,26 @@ export default class AiChatTranslationDashboard extends Component {
 
   get overallPercentage() {
     if (this.totalTranslations > 0) {
-      return Math.min(
+      const percentage = Math.min(
         100,
         Math.round((this.completedTranslations / this.totalTranslations) * 100)
       );
+
+      return this.messagesWithDetectedLocale < this.total
+        ? Math.min(99, percentage)
+        : percentage;
     }
-    return this.total > 0 ? 100 : 0;
+
+    return this.total === 0 || this.messagesWithDetectedLocale === this.total
+      ? 100
+      : 0;
+  }
+
+  get allTranslationsComplete() {
+    return (
+      this.messagesWithDetectedLocale === this.total &&
+      this.pendingTranslations === 0
+    );
   }
 
   get overallBarStyle() {
@@ -105,9 +118,14 @@ export default class AiChatTranslationDashboard extends Component {
       const done = Number(row.done) || 0;
       const total = Number(row.total) || 0;
       const pending = Math.max(0, total - done);
-      const percentage =
-        total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 100;
-      const isComplete = total > 0 && done === total;
+      const noPendingWork = this.allTranslationsComplete;
+      let percentage = 0;
+      if (total > 0) {
+        percentage = Math.min(100, Math.round((done / total) * 100));
+      } else if (noPendingWork) {
+        percentage = 100;
+      }
+      const isComplete = total > 0 ? done === total : noPendingWork;
 
       return {
         locale: row.locale,
@@ -147,7 +165,7 @@ export default class AiChatTranslationDashboard extends Component {
 
   @action
   navigateToSettings() {
-    this.router.transitionTo("adminPlugins.show", "ai-chat-translation");
+    this.router.transitionTo("adminPlugins.show.settings", "ai-chat-translation");
   }
 
   <template>
@@ -162,17 +180,17 @@ export default class AiChatTranslationDashboard extends Component {
         @descriptionLabel={{i18n "ai_chat_translation.admin.description"}}
       >
         <:actions as |actions|>
-          <DButton
+          <actions.Default
             @icon="rotate"
             @action={{this.loadProgress}}
             @isLoading={{this.loadingProgress}}
             @label="ai_chat_translation.admin.progress.refresh"
-            class="btn-default ai-chat-translation-dashboard__refresh-btn"
+            class="ai-chat-translation-dashboard__refresh-btn"
           />
           <actions.Default
             @label="ai_chat_translation.admin.nav.settings"
             @icon="gear"
-            @route="adminPlugins.show"
+            @route="adminPlugins.show.settings"
             @routeModels="ai-chat-translation"
             class="btn-default"
           />
@@ -228,7 +246,7 @@ export default class AiChatTranslationDashboard extends Component {
             <div class="ai-chat-translation-dashboard__stat-icon --pending">
               {{dIcon "clock"}}
             </div>
-            {{#if (eq this.pendingTranslations 0)}}
+            {{#if this.allTranslationsComplete}}
               <span class="ai-chat-translation-dashboard__badge --success">
                 {{dIcon "check"}}
                 {{i18n "ai_chat_translation.admin.stats.all_completed"}}
