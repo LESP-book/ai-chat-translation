@@ -9,6 +9,17 @@
 
 enabled_site_setting :ai_chat_translation_enabled
 
+register_asset "stylesheets/admin/ai-chat-translation-dashboard.scss"
+
+register_svg_icon "language"
+register_svg_icon "comments"
+register_svg_icon "circle-check"
+register_svg_icon "clock"
+register_svg_icon "rotate"
+register_svg_icon "gear"
+register_svg_icon "arrows-rotate"
+register_svg_icon "layer-group"
+
 module ::AiChatTranslation
   PLUGIN_NAME = "ai-chat-translation"
 
