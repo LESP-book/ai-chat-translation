@@ -8,26 +8,14 @@ en:
       scheduled: "Translation scheduled"
       admin:
         title: "Chat translation"
-        description: "Control chat translation backfill and the chat channels included in automatic translation."
-        save: "Save"
-        cancel: "Cancel"
+        description: "View chat translation progress."
         nav:
           dashboard: "Dashboard"
-          dashboard_description: "Backfill, channel scope, and translation progress"
+          dashboard_description: "Translation progress"
         stats:
           total: "Eligible chat messages"
           detected: "Messages with detected language"
           pending: "Pending translation tasks"
-        backfill:
-          title: "Backfill"
-          description: "Chat backfill is separate from post backfill. Set either value to 0 to disable historical chat translation."
-          hourly_rate: "Hourly rate"
-          max_age_days: "Maximum age in days"
-        channels:
-          title: "Channels"
-          description: "Choose which public chat channels are translated. Leave empty to include all public chat channels; direct messages still follow the AI translation personal messages setting."
-          all_public: "All public chat channels"
-          messages: "%{count} messages"
         progress:
           title: "Translation progress"
           loading: "Loading progress..."

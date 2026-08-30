@@ -1,0 +1,51 @@
+feature: 2026-08-29-group-direct-message-translation-scope
+created: "2026-08-29"
+
+steps:
+  - action: "策略与配置骨架：由 DirectMessageTranslationPolicy 独占群组私信白名单的读取、解析、资格与 scope 条件"
+    exit_signal: "一对一私信与未白名单群组私信均无资格，且 Candidates 不拥有直接消息 setting 解析或资格方法"
+    status: done
+  - action: "回填编排：将同一群组私信 policy 表达为候选消息 scope，并更新进度缓存范围"
+    exit_signal: "实时、回填和进度对同一消息集合得出一致范围，白名单变更不会命中旧进度缓存"
+    status: done
+  - action: "后台数据边界：提供独立的群组私信选项查询与 Settings scope 接口"
+    exit_signal: "管理员能获取全部群组私信的名称和 ID，scope 响应不含成员、消息内容或消息数量"
+    status: done
+  - action: "Settings 交互：为两个白名单 setting 注册独立可搜索多选字段，并让 Dashboard 只显示进度"
+    exit_signal: "两个 Settings 字段分别从 scope 接口异步加载、映射和写回 ID；清空群组私信选择明确表示不翻译任何群组私信"
+    status: done
+  - action: "契约验证：覆盖资格、强制翻译、回填、缓存、scope 接口和 Settings 多选交互的关键场景"
+    exit_signal: "已添加相关自动化用例并通过静态检查；完整 RSpec 因开发容器缺少 bundle 依赖，按用户要求跳过"
+    status: done
+
+checks:
+  - item: "DirectMessageTranslationPolicy 独占群组私信白名单的解析、频道资格与 scope 条件；公开频道白名单仍由原有 Candidates 逻辑处理"
+    source: "名词契约"
+    status: pending
+  - item: "直接消息资格仅允许白名单中的群组私信；一对一私信始终拒绝"
+    source: "名词契约"
+    status: pending
+  - item: "实时创建、编辑重翻译、手动 force 请求、回填和进度使用同一直接消息范围"
+    source: "编排骨架"
+    status: pending
+  - item: "ai_translation_personal_messages 不参与本插件的直接消息资格或进度缓存范围"
+    source: "跨层纪律"
+    status: pending
+  - item: "新白名单变更会使进度缓存范围失效"
+    source: "挂载点"
+    status: pending
+  - item: "dashboard 的群组私信 provider 仅返回名称和 ID，可覆盖管理员未参与的群组私信"
+    source: "跨层纪律"
+    status: pending
+  - item: "公开频道白名单和其空列表表示全部公开频道的现有行为保持不变"
+    source: "范围守护"
+    status: pending
+  - item: "没有一对一私信翻译开关、所有群组快捷开关、成员或消息级后台展示"
+    source: "范围守护"
+    status: pending
+  - item: "一对一私信、空白名单、未选中群组私信均不会进入实时、强制或回填翻译"
+    source: "验收场景"
+    status: pending
+  - item: "白名单群组私信可翻译，且结果不随 ai_translation_personal_messages 的值改变"
+    source: "验收场景"
+    status: pending

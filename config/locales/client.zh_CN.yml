@@ -8,26 +8,14 @@ zh_CN:
       scheduled: "已安排翻译"
       admin:
         title: "聊天翻译"
-        description: "控制聊天翻译回填，以及哪些聊天频道会进入自动翻译范围。"
-        save: "保存"
-        cancel: "取消"
+        description: "查看聊天翻译进度。"
         nav:
           dashboard: "仪表盘"
-          dashboard_description: "回填、频道范围和翻译进度"
+          dashboard_description: "翻译进度"
         stats:
           total: "候选聊天消息"
           detected: "已识别语言的消息"
           pending: "待翻译任务"
-        backfill:
-          title: "回填"
-          description: "聊天回填与帖子回填分开控制。任一值设为 0 时，不会翻译历史聊天消息。"
-          hourly_rate: "每小时速率"
-          max_age_days: "最大天数"
-        channels:
-          title: "频道"
-          description: "选择需要翻译的公开聊天频道。留空表示包含所有公开聊天频道；私信仍沿用 AI 翻译的个人消息设置。"
-          all_public: "所有公开聊天频道"
-          messages: "%{count} 条消息"
         progress:
           title: "翻译进度"
           loading: "正在加载进度..."

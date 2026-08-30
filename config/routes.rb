@@ -11,7 +11,7 @@ Discourse::Application.routes.draw do
   mount AiChatTranslation::Engine, at: "ai-chat-translation"
 
   scope "/admin/plugins/ai-chat-translation", constraints: AdminConstraint.new do
-    get "/dashboard" => "ai_chat_translation/admin/dashboard#show", :format => :json
     get "/dashboard/progress" => "ai_chat_translation/admin/dashboard#progress", :format => :json
+    get "/translation-scopes" => "ai_chat_translation/admin/translation_scopes#show", :format => :json
   end
 end

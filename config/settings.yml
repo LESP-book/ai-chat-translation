@@ -15,5 +15,10 @@ plugins:
   ai_chat_translation_allowed_channel_ids:
     default: ""
     type: list
-    list_type: simple
+    list_type: ai_chat_translation_channel
+    client: false
+  ai_chat_translation_allowed_direct_message_channel_ids:
+    default: ""
+    type: list
+    list_type: ai_chat_translation_direct_message_channel
     client: false

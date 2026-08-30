@@ -4,7 +4,11 @@ zh_CN:
     ai_chat_translation_backfill_hourly_rate: "聊天 AI 翻译回填每小时速率"
     ai_chat_translation_backfill_max_age_days: "聊天 AI 翻译回填最大天数"
     ai_chat_translation_allowed_channel_ids: "允许聊天 AI 翻译的频道"
+    ai_chat_translation_allowed_direct_message_channel_ids: "允许聊天 AI 翻译的群组私信"
   ai_chat_translation:
+    admin:
+      group_direct_messages:
+        unnamed: "群组私信 #%{id}"
     errors:
       disabled: "聊天 AI 翻译未启用。"
       not_translatable: "这条聊天消息不能翻译。"

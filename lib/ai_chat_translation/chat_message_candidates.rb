@@ -22,14 +22,7 @@ module AiChatTranslation
       return false if channel.blank?
 
       if channel.direct_message_channel?
-        case SiteSetting.ai_translation_personal_messages
-        when "all"
-          true
-        when "group"
-          channel.direct_message_group?
-        else
-          false
-        end
+        DirectMessageTranslationPolicy.eligible_channel?(channel)
       else
         channel.chatable_type == "Category" &&
           channel_allowed_by_setting?(channel) &&
@@ -68,11 +61,13 @@ module AiChatTranslation
 
       category_condition, category_params =
         DiscourseAi::Translation.category_scope_condition(category_column: "chat_channels.chatable_id")
+      direct_message_condition, direct_message_params =
+        DirectMessageTranslationPolicy.scope_condition(channel_column: "chat_messages.chat_channel_id")
       messages =
         messages.where(
-          "chat_channels.chatable_type = 'DirectMessage' OR " \
+          "(#{direct_message_condition}) OR " \
             "(chat_channels.chatable_type = 'Category' AND (#{category_condition}))",
-          category_params,
+          direct_message_params.merge(category_params),
         )
 
       allowed_ids = allowed_channel_ids
@@ -84,16 +79,7 @@ module AiChatTranslation
           )
       end
 
-      case SiteSetting.ai_translation_personal_messages
-      when "all"
-        messages
-      when "group"
-        messages.where(
-          "chat_channels.chatable_type != 'DirectMessage' OR chat_channels.chatable_id IN (SELECT id FROM direct_message_channels WHERE direct_message_channels.group = TRUE)",
-        )
-      else
-        messages.where.not(chat_channels: { chatable_type: "DirectMessage" })
-      end
+      messages
     end
 
     def self.needs_locale_detection(limit:)
@@ -136,26 +122,15 @@ module AiChatTranslation
       Discourse.cache.fetch(progress_cache_key, expires_in: 30.minutes) { completion_all_locales }
     end
 
-    def self.available_channel_options(user)
-      Chat::Channel
-        .public_channels
-        .where(status: Chat::Channel.statuses[:open])
-        .includes(:chatable)
-        .order(:id)
-        .map do |channel|
-          { id: channel.id, title: channel.title(user), messages_count: channel.messages_count }
-        end
-    end
-
     def self.progress_cache_key
       [
         "ai-chat-translations-progress",
-        "v2",
+        "v3",
         SiteSetting.content_localization_supported_locales,
         SiteSetting.ai_chat_translation_backfill_max_age_days,
         SiteSetting.ai_chat_translation_allowed_channel_ids,
+        DirectMessageTranslationPolicy.cache_key,
         SiteSetting.ai_translation_include_bot_content,
-        SiteSetting.ai_translation_personal_messages,
         DiscourseAi::Translation.category_scope_cache_key,
       ].join(":")
     end

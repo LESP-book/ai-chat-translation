@@ -13,6 +13,7 @@ describe AiChatTranslation::ChatMessageCandidates do
     SiteSetting.ai_chat_translation_backfill_hourly_rate = 60
     SiteSetting.ai_chat_translation_backfill_max_age_days = 30
     SiteSetting.ai_chat_translation_allowed_channel_ids = ""
+    SiteSetting.ai_chat_translation_allowed_direct_message_channel_ids = ""
     SiteSetting.ai_translation_category_scope = "public"
     SiteSetting.ai_translation_categories = ""
     SiteSetting.ai_translation_personal_messages = "none"
@@ -52,17 +53,27 @@ describe AiChatTranslation::ChatMessageCandidates do
     expect(described_class.eligible_message?(system_message, force: true)).to eq(false)
   end
 
-  it "uses existing PM policy for group direct messages" do
-    SiteSetting.ai_translation_personal_messages = "group"
+  it "allows whitelisted group direct messages without using the global personal-message setting" do
     dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user), Fabricate(:user)])
     dm_message = Fabricate(:chat_message, user:, chat_channel: dm)
+    SiteSetting.ai_chat_translation_allowed_direct_message_channel_ids = dm.id.to_s
+    SiteSetting.ai_translation_personal_messages = "none"
 
     expect(described_class.eligible_message?(dm_message)).to eq(true)
   end
 
-  it "uses existing PM policy to reject non-group direct messages" do
-    SiteSetting.ai_translation_personal_messages = "group"
+  it "rejects non-group direct messages even when their ID is whitelisted" do
     dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user)])
+    dm_message = Fabricate(:chat_message, user:, chat_channel: dm)
+    SiteSetting.ai_chat_translation_allowed_direct_message_channel_ids = dm.id.to_s
+    SiteSetting.ai_translation_personal_messages = "all"
+
+    expect(described_class.eligible_message?(dm_message)).to eq(false)
+  end
+
+  it "rejects group direct messages missing from the plugin allowlist" do
+    SiteSetting.ai_translation_personal_messages = "all"
+    dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user), Fabricate(:user)])
     dm_message = Fabricate(:chat_message, user:, chat_channel: dm)
 
     expect(described_class.eligible_message?(dm_message)).to eq(false)
@@ -84,16 +95,29 @@ describe AiChatTranslation::ChatMessageCandidates do
     expect(described_class.needs_locale_detection(limit: 10)).not_to include(message)
   end
 
-  it "does not apply the public channel allowlist to direct-message backfill" do
+  it "uses the direct-message allowlist for backfill without including direct messages outside it" do
     SiteSetting.ai_translation_personal_messages = "all"
     SiteSetting.ai_chat_translation_allowed_channel_ids = Fabricate(:category_channel).id.to_s
-    dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user)])
-    dm_message = Fabricate(:chat_message, user:, chat_channel: dm, message: "Hello")
+    allowed_dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user), Fabricate(:user)])
+    unallowed_dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user), Fabricate(:user)])
+    personal_dm = Fabricate(:direct_message_channel, users: [user, Fabricate(:user)])
+    allowed_message = Fabricate(:chat_message, user:, chat_channel: allowed_dm, message: "Allowed")
+    unallowed_message = Fabricate(:chat_message, user:, chat_channel: unallowed_dm, message: "Unallowed")
+    personal_message = Fabricate(:chat_message, user:, chat_channel: personal_dm, message: "Personal")
+    SiteSetting.ai_chat_translation_allowed_direct_message_channel_ids = allowed_dm.id.to_s
 
     candidates = described_class.needs_locale_detection(limit: 10)
 
     expect(candidates).not_to include(message)
-    expect(candidates).to include(dm_message)
+    expect(candidates).to include(allowed_message)
+    expect(candidates).not_to include(unallowed_message, personal_message)
+  end
+
+  it "changes the progress cache key when the direct-message allowlist changes" do
+    original_key = described_class.progress_cache_key
+    SiteSetting.ai_chat_translation_allowed_direct_message_channel_ids = "1|2"
+
+    expect(described_class.progress_cache_key).not_to eq(original_key)
   end
 
   it "reports completion for all supported locales" do

@@ -33,12 +33,16 @@ after_initialize do
     lib/ai_chat_translation/chat_raw_translator
     lib/ai_chat_translation/chat_message_localizer
     lib/ai_chat_translation/chat_message_locale_detector
+    lib/ai_chat_translation/direct_message_translation_policy
     lib/ai_chat_translation/chat_message_candidates
+    lib/ai_chat_translation/admin/group_direct_message_options
+    lib/ai_chat_translation/admin/translation_scope_options
     lib/ai_chat_translation/chat_message_serializer_extension
     lib/ai_chat_translation/messages_query_extension
     app/models/ai_chat_message_localization
     app/controllers/ai_chat_translation/translation_controller
     app/controllers/ai_chat_translation/admin/dashboard_controller
+    app/controllers/ai_chat_translation/admin/translation_scopes_controller
     app/jobs/regular/detect_translate_chat_message
     app/jobs/regular/localize_chat_messages
     app/jobs/scheduled/chat_messages_locale_detection_backfill
