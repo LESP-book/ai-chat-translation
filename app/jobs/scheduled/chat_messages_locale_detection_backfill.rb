@@ -11,7 +11,12 @@ module Jobs
     def execute(args)
       return if !AiChatTranslation.backfill_enabled?
 
-      unless DiscourseAi::Translation.credits_available_for_post_detection?
+      unless DiscourseAi::Translation.credits_available_for_agent_ids?(
+               [
+                 SiteSetting.ai_translation_locale_detector_agent,
+                 AiChatTranslation::TranslationConfiguration.translator_agent_id,
+               ],
+             )
         Rails.logger.info(
           "Chat locale detection backfill skipped: insufficient credits. Will resume when credits reset.",
         )

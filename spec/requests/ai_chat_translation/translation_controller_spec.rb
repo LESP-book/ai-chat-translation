@@ -15,7 +15,9 @@ describe AiChatTranslation::TranslationController do
     SiteSetting.content_localization_enabled = true
     SiteSetting.allow_user_locale = true
     SiteSetting.content_localization_allowed_groups = Group::AUTO_GROUPS[:staff].to_s
-    allow(DiscourseAi::Translation).to receive(:enabled?).and_return(true)
+    SiteSetting.discourse_ai_enabled = true
+    SiteSetting.ai_translation_enabled = true
+    allow(AiChatTranslation::TranslationConfiguration).to receive(:ready?).and_return(true)
   end
 
   it "requires login" do
@@ -62,7 +64,7 @@ describe AiChatTranslation::TranslationController do
 
   it "returns bad request when AI translation is disabled" do
     sign_in(admin)
-    allow(DiscourseAi::Translation).to receive(:enabled?).and_return(false)
+    SiteSetting.ai_translation_enabled = false
 
     post "/ai-chat-translation/channels/#{channel.id}/messages/#{message.id}/translate.json"
 

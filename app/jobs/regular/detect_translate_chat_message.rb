@@ -11,7 +11,12 @@ module Jobs
       return if !AiChatTranslation.enabled?
       return if args[:chat_message_id].blank?
 
-      unless DiscourseAi::Translation.credits_available_for_post_detection?
+      unless DiscourseAi::Translation.credits_available_for_agent_ids?(
+               [
+                 SiteSetting.ai_translation_locale_detector_agent,
+                 AiChatTranslation::TranslationConfiguration.translator_agent_id,
+               ],
+             )
         Rails.logger.info(
           "Chat translation skipped: insufficient credits. Will resume when credits reset.",
         )

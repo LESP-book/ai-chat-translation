@@ -13,7 +13,9 @@ module Jobs
       pairs = args[:pairs] || []
       return if pairs.blank?
 
-      unless DiscourseAi::Translation.credits_available_for_post_localization?
+      unless DiscourseAi::Translation.credits_available_for_agent_ids?(
+               [AiChatTranslation::TranslationConfiguration.translator_agent_id],
+             )
         Rails.logger.info(
           "Chat localization skipped: insufficient credits. Will resume when credits reset.",
         )

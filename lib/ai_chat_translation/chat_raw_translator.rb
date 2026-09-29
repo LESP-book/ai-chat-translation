@@ -5,7 +5,7 @@ module AiChatTranslation
     private
 
     def agent_setting
-      SiteSetting.ai_translation_post_raw_translator_agent
+      TranslationConfiguration.translator_agent_id
     end
   end
 end

@@ -12,7 +12,9 @@ module Jobs
 
       return if Discourse.redis.get(REDIS_KEY).to_i > 0
 
-      unless DiscourseAi::Translation.credits_available_for_post_localization?
+      unless DiscourseAi::Translation.credits_available_for_agent_ids?(
+               [AiChatTranslation::TranslationConfiguration.translator_agent_id],
+             )
         Rails.logger.info(
           "Chat localization backfill skipped: insufficient credits. Will resume when credits reset.",
         )

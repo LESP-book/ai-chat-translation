@@ -46,7 +46,10 @@ module ::AiChatTranslation
 
   def self.enabled?
     defined?(::Chat) && defined?(::DiscourseAi::Translation) && SiteSetting.chat_enabled &&
-      SiteSetting.ai_chat_translation_enabled && DiscourseAi::Translation.enabled?
+      SiteSetting.ai_chat_translation_enabled && SiteSetting.discourse_ai_enabled &&
+      SiteSetting.ai_translation_enabled &&
+      SiteSetting.content_localization_supported_locales.present? &&
+      TranslationConfiguration.ready?
   end
 
   def self.backfill_enabled?
@@ -55,6 +58,8 @@ module ::AiChatTranslation
   end
 end
 
+require_relative "lib/ai_chat_translation/translation_configuration"
+require_relative "lib/ai_chat_translation/translator_agent_enumerator"
 require_relative "lib/ai_chat_translation/engine"
 
 # These power settings fields that are registered even when Discourse AI has not
@@ -64,6 +69,13 @@ require_relative "lib/ai_chat_translation/admin/group_direct_message_options"
 require_relative "lib/ai_chat_translation/admin/translation_scope_options"
 
 after_initialize do
+  register_modifier(:site_setting_result) do |result|
+    if result[:setting] == :ai_chat_translation_translator_agent
+      result[:label] = I18n.t("ai_chat_translation.translator_agent_label")
+    end
+    result
+  end
+
   require_relative "app/controllers/ai_chat_translation/admin/dashboard_controller"
   require_relative "app/controllers/ai_chat_translation/localizations_controller"
   require_relative "app/controllers/ai_chat_translation/translation_controller"

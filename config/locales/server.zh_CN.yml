@@ -1,11 +1,14 @@
 zh_CN:
   site_settings:
     ai_chat_translation_enabled: "启用聊天消息 AI 翻译"
+    ai_chat_translation_translator_agent: "选择用于翻译 Chat 消息的 Agent。默认跟随官方帖子翻译 Agent。建议为 Chat 创建专用 Agent，并在该 Agent 中明确指定快速模型。更改此设置不会自动重新翻译已有消息。"
     ai_chat_translation_backfill_hourly_rate: "聊天 AI 翻译回填每小时速率"
     ai_chat_translation_backfill_max_age_days: "聊天 AI 翻译回填最大天数"
     ai_chat_translation_allowed_channel_ids: "允许聊天 AI 翻译的频道"
     ai_chat_translation_allowed_direct_message_channel_ids: "允许聊天 AI 翻译的群组私信"
   ai_chat_translation:
+    translator_agent_label: "Chat 消息翻译 Agent"
+    follow_official_post_agent: "跟随官方帖子翻译 Agent"
     admin:
       group_direct_messages:
         unnamed: "群组私信 #%{id}"

@@ -17,7 +17,10 @@ describe AiChatTranslation::ChatMessageCandidates do
     SiteSetting.ai_translation_category_scope = "public"
     SiteSetting.ai_translation_categories = ""
     SiteSetting.ai_translation_personal_messages = "none"
-    allow(DiscourseAi::Translation).to receive(:enabled?).and_return(true)
+    SiteSetting.discourse_ai_enabled = true
+    SiteSetting.ai_translation_enabled = true
+    SiteSetting.content_localization_supported_locales = "fr|en"
+    allow(AiChatTranslation::TranslationConfiguration).to receive(:ready?).and_return(true)
   end
 
   it "accepts normal category channel messages" do

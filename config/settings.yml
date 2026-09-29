@@ -2,6 +2,11 @@ plugins:
   ai_chat_translation_enabled:
     default: false
     client: true
+  ai_chat_translation_translator_agent:
+    default: "follow_official"
+    type: enum
+    enum: "AiChatTranslation::TranslatorAgentEnumerator"
+    client: false
   ai_chat_translation_backfill_hourly_rate:
     default: 0
     min: 0
