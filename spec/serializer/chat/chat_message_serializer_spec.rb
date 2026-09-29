@@ -10,6 +10,7 @@ describe Chat::MessageSerializer do
     SiteSetting.chat_enabled = true
     SiteSetting.ai_chat_translation_enabled = true
     SiteSetting.discourse_ai_enabled = true
+    assign_fake_provider_to(:ai_default_llm_model)
     SiteSetting.ai_translation_enabled = true
     SiteSetting.content_localization_supported_locales = "fr|en"
     allow(AiChatTranslation::TranslationConfiguration).to receive(:ready?).and_return(true)

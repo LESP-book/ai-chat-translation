@@ -10,6 +10,7 @@ describe Jobs::DetectTranslateChatMessage do
     SiteSetting.ai_chat_translation_enabled = true
     SiteSetting.content_localization_supported_locales = "fr|en"
     SiteSetting.discourse_ai_enabled = true
+    assign_fake_provider_to(:ai_default_llm_model)
     SiteSetting.ai_translation_enabled = true
     allow(AiChatTranslation::TranslationConfiguration).to receive(:ready?).and_return(true)
     allow(DiscourseAi::Translation).to receive(:locales).and_return(%w[fr en])

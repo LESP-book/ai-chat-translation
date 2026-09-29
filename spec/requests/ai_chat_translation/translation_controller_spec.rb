@@ -16,6 +16,7 @@ describe AiChatTranslation::TranslationController do
     SiteSetting.allow_user_locale = true
     SiteSetting.content_localization_allowed_groups = Group::AUTO_GROUPS[:staff].to_s
     SiteSetting.discourse_ai_enabled = true
+    assign_fake_provider_to(:ai_default_llm_model)
     SiteSetting.ai_translation_enabled = true
     allow(AiChatTranslation::TranslationConfiguration).to receive(:ready?).and_return(true)
   end
@@ -89,7 +90,7 @@ describe AiChatTranslation::TranslationController do
       cooked: "<p>Bonjour</p>",
       source_hash:,
     )
-    user.update!(locale: "fr_CA")
+    user.update!(locale: "fr")
     sign_in(user)
 
     get "/ai-chat-translation/channels/#{channel.id}/messages/#{message.id}/localization.json"

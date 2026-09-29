@@ -6,19 +6,19 @@ describe AiChatTranslation::ChatRawTranslator do
 
   before do
     enable_current_plugin
-    SiteSetting.ai_translation_enabled = true
     assign_fake_provider_to(:ai_default_llm_model)
+    SiteSetting.ai_translation_enabled = true
   end
 
   it "passes the dedicated agent and its selected model to the official Bot via the real localizer" do
-    model = Fabricate(:fake_model)
-    agent = Fabricate(:ai_agent, enabled: true, default_llm: model)
+    chat_model = Fabricate(:fake_model)
+    chat_agent = Fabricate(:ai_agent, enabled: false, default_llm: chat_model)
     post_agent_id = SiteSetting.ai_translation_post_raw_translator_agent
-    SiteSetting.ai_chat_translation_translator_agent = agent.id.to_s
+    SiteSetting.ai_chat_translation_translator_agent = chat_agent.id.to_s
     bot = instance_double(DiscourseAi::Agents::Bot)
-    allow(DiscourseAi::Agents::Bot).to receive(:as) do |_user, agent: selected, model: selected_model|
-      expect(selected.id).to eq(agent.id)
-      expect(selected_model).to eq(model)
+    allow(DiscourseAi::Agents::Bot).to receive(:as) do |_user, agent:, model:|
+      expect(agent.id).to eq(chat_agent.id)
+      expect(model).to eq(chat_model)
       bot
     end
     allow(bot).to receive(:reply) { |_context, llm_args:, &block| block.call("Bonjour", nil, :text) }

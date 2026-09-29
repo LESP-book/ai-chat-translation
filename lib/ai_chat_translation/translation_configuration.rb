@@ -9,9 +9,9 @@ module AiChatTranslation
       return SiteSetting.ai_translation_post_raw_translator_agent if selected == FOLLOW_OFFICIAL
 
       agent = AiAgent.find_by_id_from_cache(selected) if selected.match?(/\A-?\d+\z/)
-      return selected if agent&.enabled?
+      return selected if agent.present?
 
-      Rails.logger.warn("Chat translation unavailable: selected agent #{selected.inspect} is missing or disabled")
+      Rails.logger.warn("Chat translation unavailable: selected agent #{selected.inspect} is missing")
       nil
     end
 

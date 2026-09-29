@@ -6,9 +6,9 @@ describe AiChatTranslation::TranslationConfiguration do
     SiteSetting.chat_enabled = true
     SiteSetting.ai_chat_translation_enabled = true
     SiteSetting.discourse_ai_enabled = true
+    assign_fake_provider_to(:ai_default_llm_model)
     SiteSetting.ai_translation_enabled = true
     SiteSetting.content_localization_supported_locales = "fr|en"
-    assign_fake_provider_to(:ai_default_llm_model)
   end
 
   it "defaults to the official post agent, including its negative built-in ID" do
@@ -32,24 +32,24 @@ describe AiChatTranslation::TranslationConfiguration do
     detector.update!(default_llm: Fabricate(:fake_model))
     agent = Fabricate(:ai_agent, enabled: true, default_llm: Fabricate(:fake_model))
     SiteSetting.ai_chat_translation_translator_agent = agent.id.to_s
-    SiteSetting.ai_default_llm_model = ""
 
     allow(DiscourseAi::Translation).to receive(:has_llm_model?).and_return(false)
     expect(AiChatTranslation.enabled?).to eq(true)
     expect(DiscourseAi::Translation).not_to have_received(:has_llm_model?)
   end
 
-  it "does not fall back when a selected agent is disabled or missing" do
-    agent = Fabricate(:ai_agent, enabled: true, default_llm: Fabricate(:fake_model))
+  it "allows a translation-only agent even when its AI Bot switch is off" do
+    agent = Fabricate(:ai_agent, enabled: false, default_llm: Fabricate(:fake_model))
     SiteSetting.ai_chat_translation_translator_agent = agent.id.to_s
-    agent.update!(enabled: false)
+
+    expect(described_class.translator_agent_id).to eq(agent.id.to_s)
+    expect(AiChatTranslation.enabled?).to eq(true)
+  end
+
+  it "does not fall back when the selected agent is missing" do
+    SiteSetting.ai_chat_translation_translator_agent = "99999999"
     allow(DiscourseAi::Agents::Bot).to receive(:as)
 
-    expect(described_class.translator_agent_id).to be_nil
-    expect(AiChatTranslation.enabled?).to eq(false)
-    expect(AiChatTranslation::ChatRawTranslator.new(text: "Hello", target_locale: "fr").translate).to be_nil
-
-    SiteSetting.ai_chat_translation_translator_agent = "99999999"
     expect(AiChatTranslation::ChatRawTranslator.new(text: "Hello", target_locale: "fr").translate).to be_nil
     expect(described_class.translator_agent_id).to be_nil
     expect(AiChatTranslation.enabled?).to eq(false)
